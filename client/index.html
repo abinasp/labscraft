@@ -8,9 +8,6 @@
     <style>
         .tracking-container {
             max-width: 600px;
-            margin: 50px auto;
-            padding: 20px;
-            text-align: center;
         }
 
         .tracking-form {
@@ -38,148 +35,120 @@
             background-color: #333;
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            overflow: auto;
-            /* Enable scrolling for long content */
-            z-index: 9999;
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: auto;
-            padding: 20px;
-            width: 80%;
-            max-width: 600px;
-            border-radius: 5px;
-            position: relative;
-            top: 50%;
-            /* Start vertically centering */
-            transform: translateY(-50%);
-            /* Adjust vertical position for perfect centering */
-            max-height: 90vh;
-            /* Ensure content fits within the viewport */
-            overflow-y: auto;
-            /* Enable scroll inside the modal for content overflow */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
-
-        .close {
-            position: absolute;
-            right: 20px;
-            top: 10px;
-            font-size: 28px;
-            cursor: pointer;
-            z-index: 10000;
-        }
-
-        #trackingDetails {
-            margin-top: 20px;
-            text-align: left;
-        }
-
         .loading {
             display: none;
             margin: 10px 0;
         }
 
-        /* New Timeline Styles */
+        .tracking-details {
+            margin-top: 20px;
+            text-align: left;
+            padding: 20px;
+            background-color: #f7f5f5;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            display: none;
+        }
+
         .tracking-timeline {
             position: relative;
             padding: 20px 0;
             max-width: 600px;
             margin: 0 auto;
+            border-left: 3px solid #e0e0e0;
         }
 
         .timeline-item {
-            padding: 10px 20px;
             position: relative;
-            border-left: 2px solid #e0e0e0;
-            margin-left: 20px;
-            padding-bottom: 20px;
-        }
-
-        .timeline-item:last-child {
-            border-left-color: #4CAF50;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 2px solid transparent;
+            transition: all 0.3s ease;
+            margin-left: 14px;
         }
 
         .timeline-item::before {
             content: '';
-            width: 16px;
-            height: 16px;
+            width: 20px;
+            height: 20px;
             background-color: #e0e0e0;
             position: absolute;
             left: -28px;
-            top: 16px;
+            top: 32px;
             border-radius: 50%;
+            transition: all 0.3s ease;
         }
 
-        .timeline-item:last-child::before {
+        .timeline-item:first-child::before {
             background-color: #4CAF50;
+            border-color: white;
         }
 
         .timeline-content {
             background-color: #f9f9f9;
-            padding: 10px;
+            border-left: 4px solid #3498db;
+            padding: 15px;
             border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item:first-child .timeline-content {
+            border-left-color: #4CAF50;
+            background-color: #e8f5e9;
         }
 
         .timeline-date {
             color: #666;
             font-size: 0.8em;
+            margin-bottom: 5px;
+            display: block;
         }
 
         .timeline-action {
             font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
         }
 
         .timeline-location {
-            color: #888;
+            color: #666;
             font-size: 0.9em;
+            font-style: italic;
+        }
+
+        .timeline-remarks {
+            color: #555;
+            font-size: 0.85em;
+            margin-top: 5px;
+            padding-top: 5px;
+            border-top: 1px solid #e0e0e0;
+        }
+
+        .timeline-item:hover .timeline-content {
+            transform: translateX(10px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
         }
     </style>
 </head>
 
 <body>
     <div class="tracking-container">
-        <h2>Track Your Order</h2>
         <div class="tracking-form">
             <input type="text" id="trackingNumber" placeholder="Enter tracking number">
             <button onclick="trackOrder()">Track Order</button>
         </div>
         <div id="loading" class="loading">Loading...</div>
-
-        <!-- Modal -->
-        <div id="trackingModal" class="modal">
-            <div class="modal-content">
-                <span class="close">&times;</span>
-                <h3>Tracking Details</h3>
-                <div id="trackingDetails"></div>
-            </div>
+        <div id="trackingDetails" class="tracking-details">
+            <div class="shipment-header"></div>
+            <div class="tracking-timeline"></div>
         </div>
     </div>
-
     <script>
-        const modal = document.getElementById("trackingModal");
-        const closeBtn = document.getElementsByClassName("close")[0];
         const trackingDetails = document.getElementById("trackingDetails");
         const loadingDiv = document.getElementById("loading");
-
-        closeBtn.onclick = function () {
-            modal.style.display = "none";
-        }
-
-        window.onclick = function (event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
+        const shipmentHeader = document.querySelector(".shipment-header");
+        const trackingTimeline = document.querySelector(".tracking-timeline");
 
         async function trackOrder() {
             const trackingNumber = document.getElementById("trackingNumber").value;
@@ -189,7 +158,6 @@
                 return;
             }
 
-            // Validate tracking number format (first char alphabet, followed by 8 digits)
             const trackingRegex = /^[A-Za-z]\d{8}$/;
             if (!trackingRegex.test(trackingNumber)) {
                 alert("Invalid tracking number format. It should be 1 alphabet followed by 8 digits.");
@@ -199,15 +167,11 @@
             loadingDiv.style.display = "block";
 
             try {
-                // Call the server API
                 const API_URL = "https://labscraft.vercel.app"
                 const response = await fetch(`${API_URL}/track-order?trackingNumber=${trackingNumber}`);
-                
                 const data = await response.json();
-                console.log(data)
 
                 if (data && data.trackDetails) {
-                    // Generate timeline HTML
                     const timelineHtml = data.trackDetails.map((track, index) => `
                 <div class="timeline-item">
                     <div class="timeline-content">
@@ -222,7 +186,6 @@
                 </div>
             `).reverse().join('');
 
-                    // Additional shipment details
                     const headerDetails = `
                 <div class="shipment-header">
                     <p><strong>Tracking Number:</strong> ${data.trackHeader.strShipmentNo}</p>
@@ -233,11 +196,9 @@
                 </div>
             `;
 
-                    // Combine header and timeline
-                    trackingDetails.innerHTML = headerDetails +
-                        `<div class="tracking-timeline">${timelineHtml}</div>`;
-
-                    modal.style.display = "block";
+                    shipmentHeader.innerHTML = headerDetails;
+                    trackingTimeline.innerHTML = timelineHtml;
+                    trackingDetails.style.display = "block";
                 } else {
                     alert("No tracking information found");
                 }
@@ -251,27 +212,16 @@
 
         function formatDate(dateString) {
             if (!dateString) return '';
-            // Assuming format is DDMMYYYY
             return `${dateString.slice(0, 2)}/${dateString.slice(2, 4)}/${dateString.slice(4)}`;
         }
 
         function formatTime(timeString) {
             if (!timeString) return '';
-
-            // Add colon to time string (2132 -> 21:32)
             const time = timeString.replace(/^(\d{2})(\d{2})$/, "$1:$2");
-
-            // Convert to Date object for easy conversion
             const [hours, minutes] = time.split(':');
             const date = new Date();
             date.setHours(parseInt(hours), parseInt(minutes));
-
-            // Format to AM/PM
-            return date.toLocaleString('en-US', {
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-            });
+            return date.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
         }
     </script>
 </body>
