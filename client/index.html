@@ -200,7 +200,7 @@
 
             try {
                 // Call the server API
-                const API_URL = "http://localhost:3000"
+                const API_URL = "https://labscraft.vercel.app"
                 const response = await fetch(`${API_URL}/track-order?trackingNumber=${trackingNumber}`);
                 
                 const data = await response.json();
